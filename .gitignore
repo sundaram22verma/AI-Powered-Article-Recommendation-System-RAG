@@ -93,14 +93,14 @@ Thumbs.db
 # Large Model Binaries (Optional / Git LFS)
 # --------------------------------------------------
 # all-MiniLM-L6-v2.onnx is ~90MB. GitHub warns on files >50MB and rejects >100MB.
-models/*.onnx
+models/
 
 
 # --------------------------------------------------
 # Project-specific Directories & Files
 # --------------------------------------------------
 mariadb-init/
-mongodb-init/
+mongo-init/
 
 # --------------------------------------------------
 # Project-specific Files
