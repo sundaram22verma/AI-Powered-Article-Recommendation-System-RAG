@@ -8,14 +8,14 @@ spring:
   # MongoDB Configuration
   data:
     mongodb:
-      uri: ${MONGO_URI:mongodb://recsys:recsys123@localhost:27017/recsys?authSource=admin}
+      uri: ${MONGO_URI:mongodb://localhost:27017/recsys}
       auto-index-creation: true
 
   # MariaDB Configuration (for Vector Store)
   datasource:
     url: ${MARIADB_URL:jdbc:mariadb://127.0.0.1:3307/recsys_vectors?allowPublicKeyRetrieval=true&useSSL=false&authenticationPlugin=mysql_native_password}
     username: ${MARIADB_USERNAME:recsys}
-    password: ${MARIADB_PASSWORD:recsys123}
+    password: ${MARIADB_PASSWORD:}
     driver-class-name: org.mariadb.jdbc.Driver
     hikari:
       maximum-pool-size: 20
@@ -187,9 +187,9 @@ spring:
       on-profile: dev
   data:
     mongodb:
-      uri: mongodb://recsys:recsys123@localhost:27017/recsys_dev?authSource=admin
+      uri: ${MONGO_URI:mongodb://localhost:27017/recsys_dev}
   datasource:
-    url: jdbc:mariadb://127.0.0.1:3307/recsys_vectors_dev?allowPublicKeyRetrieval=true&useSSL=false
+    url: ${MARIADB_URL:jdbc:mariadb://127.0.0.1:3307/recsys_vectors_dev?allowPublicKeyRetrieval=true&useSSL=false}
 
 ---
 # Production Profile
@@ -213,6 +213,6 @@ spring:
       on-profile: docker
   data:
     mongodb:
-      uri: mongodb://recsys:recsys123@mongodb:27017/recsys?authSource=admin
+      uri: ${MONGO_URI:mongodb://mongodb:27017/recsys}
   datasource:
-    url: jdbc:mariadb://mariadb:3306/recsys_vectors?allowPublicKeyRetrieval=true&useSSL=false
+    url: ${MARIADB_URL:jdbc:mariadb://mariadb:3306/recsys_vectors?allowPublicKeyRetrieval=true&useSSL=false}

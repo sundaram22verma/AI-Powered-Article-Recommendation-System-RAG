@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-recsys}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-recsys123}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-recsys}
     ports:
       - "27017:27017"
@@ -25,10 +25,10 @@ services:
     container_name: recsys-mariadb
     restart: unless-stopped
     environment:
-      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-root123}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MARIADB_DATABASE: ${MARIADB_DATABASE:-recsys_vectors}
       MARIADB_USER: ${MARIADB_USER:-recsys}
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-recsys123}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
     ports:
       - "3307:3306"
     volumes:
@@ -54,10 +54,10 @@ services:
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
-      MONGO_URI: mongodb://${MONGO_USER:-recsys}:${MONGO_PASSWORD:-recsys123}@mongodb:27017/${MONGO_DATABASE:-recsys}?authSource=admin
+      MONGO_URI: mongodb://${MONGO_USER:-recsys}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DATABASE:-recsys}?authSource=admin
       MARIADB_URL: jdbc:mariadb://mariadb:3306/${MARIADB_DATABASE:-recsys_vectors}?allowPublicKeyRetrieval=true&useSSL=false
       MARIADB_USERNAME: ${MARIADB_USER:-recsys}
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-recsys123}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
       GROQ_API_KEY: ${GROQ_API_KEY}
       GROQ_BASE_URL: ${GROQ_BASE_URL:-https://api.groq.com/openai}
       GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-20b}

@@ -2,11 +2,11 @@
 spring:
   data:
     mongodb:
-      uri: mongodb://recsys:recsys123@localhost:27017/recsys_dev?authSource=admin
+      uri: ${MONGO_URI:mongodb://localhost:27017/recsys_dev}
   datasource:
-    url: jdbc:mariadb://localhost:3306/recsys_vectors_dev
-    username: recsys
-    password: recsys123
+    url: ${MARIADB_URL:jdbc:mariadb://localhost:3306/recsys_vectors_dev}
+    username: ${MARIADB_USERNAME:recsys}
+    password: ${MARIADB_PASSWORD:}
 
 logging:
   level:
