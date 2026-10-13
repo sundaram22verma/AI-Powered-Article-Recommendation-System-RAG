@@ -1,0 +1,110 @@
+# ==============================================================================
+# AI-Powered Article Recommendation System - .gitignore
+# ==============================================================================
+
+# --------------------------------------------------
+# Build & Dependency Artifacts (Maven)
+# --------------------------------------------------
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+!/.mvn/wrapper/maven-wrapper.jar
+
+# Local classpath & diagnostic dumps
+classpath.txt
+
+# --------------------------------------------------
+# Environment Variables & Secrets
+# --------------------------------------------------
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# --------------------------------------------------
+# IDE & Editor Configuration
+# --------------------------------------------------
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Eclipse
+.apt_generated
+.apt_generated_tests
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+
+# Visual Studio Code
+.vscode/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbproject/load-from-context.xml
+
+# AI & Assistant Tools
+.claude/
+
+# Automated modernization & upgrade logs
+.github/modernize/
+
+# --------------------------------------------------
+# Logs & Runtime Dumps
+# --------------------------------------------------
+*.log
+logs/
+*.pid
+*.seed
+*.pid.lock
+hs_err_pid*
+replay_pid*
+
+# --------------------------------------------------
+# OS & System-specific Files
+# --------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# --------------------------------------------------
+# Large Model Binaries (Optional / Git LFS)
+# --------------------------------------------------
+# all-MiniLM-L6-v2.onnx is ~90MB. GitHub warns on files >50MB and rejects >100MB.
+models/*.onnx
+
+
+# --------------------------------------------------
+# Project-specific Directories & Files
+# --------------------------------------------------
+mariadb-init/
+mongodb-init/
+
+# --------------------------------------------------
+# Project-specific Files
+# --------------------------------------------------
+PRD_Recommendation_System.docx
+TRD_Recommendation_System.docx
+consolidated_data.csv

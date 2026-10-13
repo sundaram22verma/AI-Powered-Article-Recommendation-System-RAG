@@ -1,0 +1,218 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: recommendation-system
+
+  # MongoDB Configuration
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://recsys:recsys123@localhost:27017/recsys?authSource=admin}
+      auto-index-creation: true
+
+  # MariaDB Configuration (for Vector Store)
+  datasource:
+    url: ${MARIADB_URL:jdbc:mariadb://127.0.0.1:3307/recsys_vectors?allowPublicKeyRetrieval=true&useSSL=false&authenticationPlugin=mysql_native_password}
+    username: ${MARIADB_USERNAME:recsys}
+    password: ${MARIADB_PASSWORD:recsys123}
+    driver-class-name: org.mariadb.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      data-source-properties:
+        useClientSidePreparedStatements: "true"
+
+  # Servlet multipart for file upload
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  # Spring AI Configuration
+  ai:
+    # OpenAI-compatible client for Groq (primary)
+    openai:
+      chat:
+        base-url: ${GROQ_BASE_URL:https://api.groq.com/openai}
+        api-key: ${GROQ_API_KEY}
+        model: ${GROQ_MODEL:openai/gpt-oss-20b}
+        options:
+          temperature: 0.3
+          max-tokens: 500
+      embedding:
+        enabled: false  # We use local ONNX embeddings
+
+    # OpenRouter as fallback
+    openrouter:
+      chat:
+        base-url: ${OPENROUTER_BASE_URL:https://openrouter.ai/api}
+        api-key: ${OPENROUTER_API_KEY}
+        model: ${OPENROUTER_MODEL:meta-llama/llama-3.3-70b-instruct}
+        options:
+          temperature: 0.3
+          max-tokens: 500
+
+    # Vector Store - MariaDB
+    vectorstore:
+      mariadb:
+        initialize-schema: true
+        schema-name: recsys_vectors
+        table-name: article_embeddings
+        dimensions: 384  # all-MiniLM-L6-v2 embedding dimension
+        distance-type: COSINE
+
+    # ONNX Embedding Model (Local Sentence Transformers)
+    model:
+      onnx:
+        embedding:
+          model-path: ${EMBEDDING_MODEL_PATH:file:./models/all-MiniLM-L6-v2.onnx}
+          tokenizer-path: ${EMBEDDING_TOKENIZER_PATH:file:./models/tokenizer.json}
+          pooling-mode: MEAN
+
+# Ingestion Configuration
+ingestion:
+  csv:
+    batch-size: 100
+    embedding-batch-size: 32
+    text-fields: hl,syn  # Fields to concatenate for embedding
+    id-field: id
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      groqChat:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        slidingWindowType: COUNT_BASED
+      openRouterChat:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        slidingWindowType: COUNT_BASED
+      embeddingClient:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        slidingWindowType: COUNT_BASED
+
+  retry:
+    instances:
+      groqChat:
+        maxAttempts: 3
+        waitDuration: 2s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - org.springframework.web.client.RestClientException
+          - java.lang.RuntimeException
+      openRouterChat:
+        maxAttempts: 3
+        waitDuration: 2s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - org.springframework.web.client.RestClientException
+          - java.lang.RuntimeException
+      embeddingClient:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - java.lang.RuntimeException
+
+  timelimiter:
+    instances:
+      groqChat:
+        timeoutDuration: 30s
+        cancelRunningFuture: true
+      openRouterChat:
+        timeoutDuration: 30s
+        cancelRunningFuture: true
+      embeddingClient:
+        timeoutDuration: 15s
+        cancelRunningFuture: true
+
+# Logging Configuration
+logging:
+  level:
+    com.company.recsys: DEBUG
+    org.springframework.ai: DEBUG
+    org.springframework.data.mongodb: DEBUG
+    org.mariadb.jdbc: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Actuator endpoints for monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,circuitbreakers,retries
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+---
+# Profile-specific configurations
+
+# Development Profile
+spring:
+  config:
+    activate:
+      on-profile: dev
+  data:
+    mongodb:
+      uri: mongodb://recsys:recsys123@localhost:27017/recsys_dev?authSource=admin
+  datasource:
+    url: jdbc:mariadb://127.0.0.1:3307/recsys_vectors_dev?allowPublicKeyRetrieval=true&useSSL=false
+
+---
+# Production Profile
+spring:
+  config:
+    activate:
+      on-profile: prod
+  data:
+    mongodb:
+      uri: ${MONGO_URI}
+  datasource:
+    url: ${MARIADB_URL:jdbc:mariadb://127.0.0.1:3307/recsys_vectors?allowPublicKeyRetrieval=true&useSSL=false}
+    hikari:
+      maximum-pool-size: 50
+
+---
+# Docker Profile
+spring:
+  config:
+    activate:
+      on-profile: docker
+  data:
+    mongodb:
+      uri: mongodb://recsys:recsys123@mongodb:27017/recsys?authSource=admin
+  datasource:
+    url: jdbc:mariadb://mariadb:3306/recsys_vectors?allowPublicKeyRetrieval=true&useSSL=false

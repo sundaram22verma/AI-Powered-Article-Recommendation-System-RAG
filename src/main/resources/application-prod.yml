@@ -1,0 +1,18 @@
+# Production profile overrides
+spring:
+  data:
+    mongodb:
+      uri: ${MONGO_URI}
+  datasource:
+    url: ${MARIADB_URL}
+    username: ${MARIADB_USERNAME}
+    password: ${MARIADB_PASSWORD}
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+
+logging:
+  level:
+    com.company.recsys: INFO
+    org.springframework.ai: WARN
+    org.springframework.data.mongodb: WARN

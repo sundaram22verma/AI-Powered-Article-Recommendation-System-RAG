@@ -1,0 +1,15 @@
+# Development profile overrides
+spring:
+  data:
+    mongodb:
+      uri: mongodb://recsys:recsys123@localhost:27017/recsys_dev?authSource=admin
+  datasource:
+    url: jdbc:mariadb://localhost:3306/recsys_vectors_dev
+    username: recsys
+    password: recsys123
+
+logging:
+  level:
+    com.company.recsys: DEBUG
+    org.springframework.ai: DEBUG
+    org.springframework.data.mongodb: DEBUG

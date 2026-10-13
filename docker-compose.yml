@@ -1,0 +1,87 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: recsys-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-recsys}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-recsys123}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-recsys}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - recsys-network
+
+  mariadb:
+    image: mariadb:11.7
+    container_name: recsys-mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-root123}
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-recsys_vectors}
+      MARIADB_USER: ${MARIADB_USER:-recsys}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-recsys123}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./mariadb-init:/docker-entrypoint-initdb.d:ro
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --plugin-load-add=vector
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - recsys-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: recsys-app
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
+      MONGO_URI: mongodb://${MONGO_USER:-recsys}:${MONGO_PASSWORD:-recsys123}@mongodb:27017/${MONGO_DATABASE:-recsys}?authSource=admin
+      MARIADB_URL: jdbc:mariadb://mariadb:3306/${MARIADB_DATABASE:-recsys_vectors}?allowPublicKeyRetrieval=true&useSSL=false
+      MARIADB_USERNAME: ${MARIADB_USER:-recsys}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-recsys123}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      GROQ_BASE_URL: ${GROQ_BASE_URL:-https://api.groq.com/openai}
+      GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-20b}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api}
+      EMBEDDING_MODEL_PATH: ${EMBEDDING_MODEL_PATH:-file:/models/all-MiniLM-L6-v2.onnx}
+      EMBEDDING_TOKENIZER_PATH: ${EMBEDDING_TOKENIZER_PATH:-file:/models/tokenizer.json}
+    ports:
+      - "8080:8080"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      mariadb:
+        condition: service_healthy
+    volumes:
+      - ./models:/models:ro
+      - ./consolidated_data.csv:/app/consolidated_data.csv:ro
+    networks:
+      - recsys-network
+
+volumes:
+  mongodb_data:
+  mariadb_data:
+
+networks:
+  recsys-network:
+    driver: bridge
